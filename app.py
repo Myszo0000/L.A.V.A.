@@ -10,14 +10,28 @@ def initialize_database():
     database.create_table(conn)
     conn.close()
 
-@app.route('/tasks', methods=['POST'])
-def add_task():
-    task_data = request.json
-    task = (task_data['name'], task_data['completed'])
+def simple_ai_response(question):
+    # Prosta logika do generowania odpowiedzi
+    responses = {
+        "Jakie są zalety uczenia maszynowego?": "Zalety to automatyzacja, dokładność, i możliwość analizy dużych zbiorów danych.",
+        "Co to jest Python?": "Python to wszechstronny język programowania, który jest łatwy do nauki i używania.",
+        "Jakie są zastosowania sztucznej inteligencji?": "Zastosowania obejmują rozpoznawanie obrazów, przetwarzanie języka naturalnego, i autonomiczne pojazdy."
+    }
+    return responses.get(question, "Przepraszam, nie znam odpowiedzi na to pytanie.")
+
+@app.route('/ask', methods=['POST'])
+def ask_question():
+    question = request.json.get('question')
+    
+    # Uzyskanie odpowiedzi z lokalnej logiki
+    answer = simple_ai_response(question)
+    
+    # Zapisanie pytania i odpowiedzi do bazy danych
     conn = database.create_connection(DATABASE)
-    task_id = database.insert_task(conn, task)
+    database.insert_task(conn, (question, answer))
     conn.close()
-    return jsonify({"id": task_id}), 201
+    
+    return jsonify({"question": question, "answer": answer}), 200
 
 @app.route('/tasks', methods=['GET'])
 def get_all_tasks():
@@ -28,4 +42,4 @@ def get_all_tasks():
 
 if __name__ == '__main__':
     app.run(debug=True)
-  
+    
